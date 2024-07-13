@@ -1,11 +1,23 @@
 'use server';
+ 
+import { z } from 'zod';
+ 
+const FormSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  amount: z.coerce.number(), // 문자열을 숫자로 강제(변경)하는 동시에 해당 유형의 유효성을 검사
+  status: z.enum(['pending', 'paid']),
+  date: z.string(),
+});
+ 
+const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export async function createInvoice(formData: FormData) {
-  const rawFormData = {
+  const { customerId, amount, status } = CreateInvoice.parse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
-  };
-  // Test it out:
-  console.log(rawFormData);
+  });
+  const amountInCents = amount * 100; // 화폐 값을 센트 단위로 저장, 부동소수점 오류를 없애고 정확도를 높
+  const date = new Date().toISOString().split('T')[0];
 }
